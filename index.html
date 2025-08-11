@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF--8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Propriedades do Simulador</title>
+    <style type="text/css">
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: auto;
+        background-color: #252526;
+        border: 1px solid #3c3c3c;
+        border-radius: 8px;
+        padding: 2rem;
+    }
+
+    header {
+        text-align: center;
+        border-bottom: 1px solid #3c3c3c;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    header h1 {
+        color: #4fc1ff;
+        margin-top: 0;
+    }
+
+    code {
+        background-color: #3a3d41;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: "Courier New", Courier, monospace;
+    }
+
+    .file-handler {
+        margin: 2rem 0;
+        text-align: center;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .custom-file-upload {
+        border: 1px solid #4fc1ff;
+        background-color: #333;
+        color: #4fc1ff;
+        display: inline-block;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
+
+    .custom-file-upload:hover {
+        background-color: #404040;
+    }
+
+    #fileName {
+        margin-left: 15px;
+        font-style: italic;
+        color: #8c8c8c;
+    }
+
+    fieldset {
+        border: 1px solid #3c3c3c;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    legend {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #dcdcaa;
+        /* Amarelo do Fogo */
+        padding: 0 10px;
+    }
+
+    .prop-group {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .prop-group label {
+        font-weight: bold;
+        text-align: right;
+        text-transform: capitalize;
+    }
+
+    .prop-group input {
+        width: 100%;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #3c3c3c;
+        background-color: #3c3c3c;
+        color: #d4d4d4;
+        font-size: 1em;
+    }
+
+    .color-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .color-group input[type="number"] {
+        width: 70px;
+    }
+
+    .color-preview {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #d4d4d4;
+        border-radius: 4px;
+    }
+
+    footer {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    #saveButton {
+        background-color: #0e639c;
+        color: white;
+        font-size: 1.1em;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    #saveButton:hover:not(:disabled) {
+        background-color: #1579ba;
+    }
+
+    #saveButton:disabled {
+        background-color: #5a5a5a;
+        cursor: not-allowed;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Editor de Propriedades do Simulador</h1>
+            <p>Carregue seu arquivo <code>config.json</code> para editar as propriedades dos elementos e depois salve as alterações.</p>
+        </header>
+        <div class="file-handler">
+            <label for="fileInput" class="custom-file-upload">Carregar config.json</label>
+            <input type="file" id="fileInput" accept=".json">
+            <span id="fileName">Nenhum arquivo selecionado</span>
+        </div>
+        <main id="editor-container">
+        </main>
+        <footer>
+            <button id="saveButton" disabled>Salvar e Baixar config.json</button>
+        </footer>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fileInput = document.getElementById('fileInput');
+        const fileNameSpan = document.getElementById('fileName');
+        const editorContainer = document.getElementById('editor-container');
+        const saveButton = document.getElementById('saveButton');
+
+        let originalConfig = null;
+
+        // Evento para quando um arquivo é selecionado
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            fileNameSpan.textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    originalConfig = JSON.parse(e.target.result);
+                    generateEditor(originalConfig);
+                    saveButton.disabled = false;
+                } catch (error) {
+                    alert('Erro ao ler o arquivo JSON. Verifique se o formato está correto.');
+                    console.error("JSON Parse Error:", error);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Função para gerar a UI de edição a partir do JSON carregado
+        function generateEditor(config) {
+            editorContainer.innerHTML = ''; // Limpa o conteúdo anterior
+
+            for (const elementName in config) {
+                const properties = config[elementName];
+                const fieldset = document.createElement('fieldset');
+                const legend = document.createElement('legend');
+                legend.textContent = elementName;
+                fieldset.appendChild(legend);
+
+                for (const propName in properties) {
+                    const propValue = properties[propName];
+                    const propId = `${elementName}-${propName}`;
+
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'prop-group';
+
+                    const label = document.createElement('label');
+                    label.setAttribute('for', propId);
+                    label.textContent = propName.replace(/_/g, ' ') + ':';
+                    groupDiv.appendChild(label);
+
+                    // Cria inputs diferentes dependendo do tipo da propriedade
+                    if (propName === 'cor' && Array.isArray(propValue)) {
+                        // Grupo especial para cores (R, G, B)
+                        const colorGroup = document.createElement('div');
+                        colorGroup.className = 'color-group';
+                        const colorPreview = document.createElement('div');
+                        colorPreview.className = 'color-preview';
+
+                        const inputs = propValue.map((colorVal, index) => {
+                            const colorInput = document.createElement('input');
+                            colorInput.type = 'number';
+                            colorInput.min = 0;
+                            colorInput.max = 255;
+                            colorInput.value = colorVal;
+                            colorInput.dataset.element = elementName;
+                            colorInput.dataset.prop = propName;
+                            colorInput.dataset.index = index;
+                            return colorInput;
+                        });
+
+                        const updateColorPreview = () => {
+                            const r = inputs[0].value;
+                            const g = inputs[1].value;
+                            const b = inputs[2].value;
+                            colorPreview.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                        };
+
+                        inputs.forEach(input => {
+                            colorGroup.appendChild(input);
+                            input.addEventListener('input', updateColorPreview);
+                        });
+
+                        colorGroup.appendChild(colorPreview);
+                        groupDiv.appendChild(colorGroup);
+                        updateColorPreview();
+
+                    } else {
+                        // Inputs numéricos para outras propriedades
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.id = propId;
+                        input.value = propValue;
+                        input.dataset.element = elementName;
+                        input.dataset.prop = propName;
+                        if (Number.isInteger(propValue)) {
+                            input.step = 1;
+                        } else {
+                            input.step = 0.01;
+                        }
+                        groupDiv.appendChild(input);
+                    }
+                    fieldset.appendChild(groupDiv);
+                }
+                editorContainer.appendChild(fieldset);
+            }
+        }
+
+        // Evento para o botão de salvar
+        saveButton.addEventListener('click', () => {
+            if (!originalConfig) {
+                alert('Nenhuma configuração carregada para salvar.');
+                return;
+            }
+
+            const newConfig = JSON.parse(JSON.stringify(originalConfig)); // Cópia profunda
+
+            const inputs = editorContainer.querySelectorAll('input[type="number"]');
+
+            inputs.forEach(input => {
+                const { element, prop, index } = input.dataset;
+                const value = parseFloat(input.value);
+
+                if (index !== undefined) { // É uma propriedade de cor
+                    newConfig[element][prop][parseInt(index)] = value;
+                } else { // Outra propriedade
+                    newConfig[element][prop] = value;
+                }
+            });
+
+            // Converte o objeto modificado em uma string JSON formatada
+            const newConfigString = JSON.stringify(newConfig, null, 2);
+
+            // Cria um "Blob" (Binary Large Object) para o download
+            const blob = new Blob([newConfigString], { type: 'application/json' });
+
+            // Cria um link temporário para iniciar o download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'config.json';
+            document.body.appendChild(a);
+            a.click();
+
+            // Limpa o link temporário da memória
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+{
+  "Madeira": {
+    "cor": [
+      80,
+      20,
+      0
+    ]
+  },
+  "Carvao": {
+    "vida": 10,
+    "chance_gerar_fogo": 1
+  },
+  "Cinzas": {
+    "cor": [
+      180,
+      180,
+      180
+    ]
+  },
+  "Agua": {
+    "velocidade_descida": 1
+  },
+  "Acido": {
+    "chance_dissolve": 1
+  },
+  "Areia": {
+    "chance_move": 1
+  },
+  "Gas": {
+    "velocidade_subida": 3
+  },
+  "Lava": {
+    "chance_move": 1
+  },
+  "Fogo": {
+    "vida_min": 28,
+    "vida_max": 56
+  },
+  "Planta": {
+    "chance_cinzas": 1
+  }
+}
