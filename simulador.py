@@ -1,5 +1,4 @@
 import sys
-import json
 import math
 # Importa tudo do arquivo de elementos.
 from simulador_elementos import *
@@ -284,7 +283,7 @@ while rodando:
         if teclas[pygame.K_9]: elemento_ativo = Madeira
         if teclas[pygame.K_0]: elemento_ativo = Planta
         
-        # Chama o método `update` de cada partícula na simulação.
+        # Chama o metodo `update` de cada partícula na simulação.
         # Usa `list(todos_elementos.keys())` para criar uma cópia,
         # pois o dicionário pode ser modificado durante a iteração.
         for pos in list(todos_elementos.keys()):

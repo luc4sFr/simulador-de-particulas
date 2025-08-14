@@ -206,7 +206,7 @@ class Particula:
 
 
 # --- CLASSES DE ELEMENTOS ESPECÍFICOS ---
-# Cada classe define o comportamento de um elemento através do método `update`.
+# Cada classe define o comportamento de um elemento através do metodo `update`.
 
 class Vidro(Particula):
     """Elemento sólido e estático com efeito de transparência."""
