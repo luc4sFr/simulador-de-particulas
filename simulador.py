@@ -1,32 +1,24 @@
 import sys
 import math
-# Importa tudo do arquivo de elementos.
 from simulador_elementos import *
-# Importa o módulo de elementos para acessar suas variáveis globais, como `propriedades_elementos`.
 import simulador_elementos
 
 # --- FUNÇÕES AUXILIARES ---
 def salvar_propriedades_para_json(caminho_arquivo='config.json'):
-    """Salva o dicionário de propriedades atual no arquivo config.json."""
     with open(caminho_arquivo, 'w') as f:
-        # 'indent=2' formata o JSON para ser mais legível.
         json.dump(simulador_elementos.propriedades_elementos, f, indent=2)
     print(f"Propriedades salvas em {caminho_arquivo}")
 
 def verifica_posicao_livre(x, y):
-    """Verifica se não há nenhum elemento na coordenada (x, y) da grade."""
     return todos_elementos.get((x, y)) is None
 
 def desenhar_elemento(tipo, x, y, raio):
     """Desenha um círculo de um tipo de elemento na grade, centrado em (x, y)."""
     raio = int(raio)
-    # Itera sobre um quadrado ao redor do ponto central.
     for dx in range(-raio, raio + 1):
         for dy in range(-raio, raio + 1):
-            # Usa a equação do círculo para preencher apenas os pixels dentro do raio.
             if dx*dx + dy*dy <= raio*raio:
                 nx, ny = x + dx, y + dy
-                # Adiciona a partícula apenas se a posição estiver livre.
                 if verifica_posicao_livre(nx, ny):
                     todos_elementos[(nx, ny)] = tipo(nx, ny, todos_elementos, superficie)
 
@@ -137,28 +129,33 @@ def desenhar_menu_propriedades(tela, fonte_titulo, fonte_normal):
 
     return botoes_clicaveis
 
+
 # --- INICIALIZAÇÃO DO PYGAME ---
+
 pygame.init()
-tela_info = pygame.display.Info()
-TelaX, TelaY = tela_info.current_w, tela_info.current_h
+# Define um tamanho fixo para a janela, em vez de tela cheia.
+TelaX, TelaY = 1280, 720
 # Define as dimensões da grade no módulo de elementos.
 definir_dimensoes_tela(TelaX // ESCALA, TelaY // ESCALA)
-# Cria a janela principal sem bordas (tela cheia).
-tela = pygame.display.set_mode((TelaX, TelaY), pygame.NOFRAME)
+# Cria a janela principal que pode ser redimensionada.
+tela = pygame.display.set_mode((TelaX, TelaY), pygame.RESIZABLE) # Adicionada a flag RESIZABLE
 pygame.display.set_caption("Simulador de Elementos")
 # 'superficie' é uma cópia da tela onde a simulação é desenhada.
 superficie = tela.copy()
 clock = pygame.time.Clock()
 
+
 # --- VARIÁVEIS DO SIMULADOR ---
+
 elemento_ativo = Metal  # Elemento selecionado para desenhar.
 tamanho_caneta = 3  # Raio do pincel de desenho.
 todos_elementos[(None, None)] = Vazio(todos_elementos, superficie) # Adiciona um elemento Vazio para evitar erros de chave.
 menu_propriedades_visivel = False # Controla a visibilidade do menu.
-# Fontes para a interface.
+
 fonte_interface = pygame.font.SysFont(None, 24)
 fonte_menu_titulo = pygame.font.SysFont(None, 32)
 fonte_menu_normal = pygame.font.SysFont(None, 28)
+
 last_mx, last_my = None, None # Armazena a última posição do mouse para desenhar linhas contínuas.
 mouse_pressionado = False # Estado do botão esquerdo do mouse.
 
@@ -194,6 +191,16 @@ while rodando:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             rodando = False
+
+        elif evento.type == pygame.VIDEORESIZE:
+            TelaX, TelaY = evento.size
+             # Obtém o novo tamanho da janela
+            tela = pygame.display.set_mode((TelaX, TelaY), pygame.RESIZABLE) # Recria a tela
+            superficie = tela.copy() # Recria a superfície de desenho
+            # Atualiza as dimensões no módulo de elementos para os limites da simulação
+            definir_dimensoes_tela(TelaX // ESCALA, TelaY // ESCALA)
+            # Limpa todos os elementos para evitar problemas com as novas dimensões
+            todos_elementos.clear()
         
         elif evento.type == pygame.MOUSEWHEEL:
             # Se o menu estiver visível, a roda do mouse controla a rolagem.
