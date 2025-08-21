@@ -140,7 +140,14 @@ definir_dimensoes_tela(TelaX // ESCALA, TelaY // ESCALA)
 # Cria a janela principal que pode ser redimensionada.
 tela = pygame.display.set_mode((TelaX, TelaY), pygame.RESIZABLE) # Adicionada a flag RESIZABLE
 pygame.display.set_caption("Simulador de Elementos")
-# 'superficie' é uma cópia da tela onde a simulação é desenhada.
+
+try:
+    fundo = pygame.image.load("fundo2.jpg").convert()
+    fundo_redimensionado = pygame.transform.scale(fundo, (TelaX, TelaY))
+except pygame.error as e:
+    print(f"Não foi possível carregar a imagem de fundo: {e}")
+    fundo = None 
+
 superficie = tela.copy()
 clock = pygame.time.Clock()
 
@@ -176,7 +183,7 @@ def desenhar_interface_principal():
         "P - Propriedades"
     ]
     for i, texto in enumerate(opcoes):
-        render = fonte_interface.render(texto, True, (255, 255, 255))
+        render = fonte_interface.render(texto, True, (0, 0, 0))
         tela.blit(render, (10, 10 + i * 24))
 
 # --- LOOP PRINCIPAL ---
@@ -194,12 +201,14 @@ while rodando:
 
         elif evento.type == pygame.VIDEORESIZE:
             TelaX, TelaY = evento.size
-             # Obtém o novo tamanho da janela
+
             tela = pygame.display.set_mode((TelaX, TelaY), pygame.RESIZABLE) # Recria a tela
-            superficie = tela.copy() # Recria a superfície de desenho
-            # Atualiza as dimensões no módulo de elementos para os limites da simulação
+            superficie = pygame.Surface((TelaX, TelaY), pygame.SRCALPHA)
+
+            if fundo:
+                fundo_redimensionado = pygame.transform.scale(fundo, (TelaX, TelaY))
+                
             definir_dimensoes_tela(TelaX // ESCALA, TelaY // ESCALA)
-            # Limpa todos os elementos para evitar problemas com as novas dimensões
             todos_elementos.clear()
         
         elif evento.type == pygame.MOUSEWHEEL:
@@ -297,26 +306,23 @@ while rodando:
             try:
                 todos_elementos[pos].update()
             except KeyError:
-                # Ignora o erro se a partícula foi removida por outra durante o mesmo quadro.
                 pass
+
+    if fundo:
+        tela.blit(fundo_redimensionado, (0, 0))
 
     # --- DESENHO NA TELA ---
     # Copia a superfície da simulação para a tela principal.
     tela.blit(superficie, (0, 0))
 
     if menu_propriedades_visivel:
-        # Se o menu estiver visível, desenha-o.
         botoes_menu_clicaveis = desenhar_menu_propriedades(tela, fonte_menu_titulo, fonte_menu_normal)
     else:
-        # Senão, desenha a interface principal e o cursor do pincel.
         desenhar_interface_principal()
         pygame.draw.circle(tela, (255, 255, 255), (mx, my), tamanho_caneta * ESCALA, 1)
 
-    # Atualiza a tela para mostrar tudo que foi desenhado.
     pygame.display.update()
 
-# --- FINALIZAÇÃO ---
-# Salva as propriedades ao sair para persistir as alterações.
 salvar_propriedades_para_json()
 pygame.quit()
 sys.exit()
