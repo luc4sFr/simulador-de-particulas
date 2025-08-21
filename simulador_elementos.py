@@ -32,7 +32,7 @@ def definir_dimensoes_tela(largura, altura):
 
 # --- DEFINIÇÃO DE CORES ---
 # Paletas de cores para os diferentes elementos. Algumas são fixas, outras são listas para variação.
-COR_VAZIO = (0, 0, 0)
+COR_VAZIO = (0, 0, 0, 0)
 COR_ELEMENTO_AREIA = (255, 255, 85)
 COR_ELEMENTO_AREIA_MOLHADA = (255, 170, 0)
 COR_METAL = (192, 192, 192)
